@@ -36,6 +36,9 @@
 
 static const uint32_t virtio_gpu_formats[] = {
 	DRM_FORMAT_HOST_XRGB8888,
+	DRM_FORMAT_HOST_ARGB8888,
+	DRM_FORMAT_XBGR8888,
+	DRM_FORMAT_ABGR8888,
 };
 
 static const uint32_t virtio_gpu_cursor_formats[] = {
@@ -58,6 +61,12 @@ uint32_t virtio_gpu_translate_format(uint32_t drm_fourcc)
 		break;
 	case DRM_FORMAT_BGRA8888:
 		format = VIRTIO_GPU_FORMAT_A8R8G8B8_UNORM;
+		break;
+	case DRM_FORMAT_XBGR8888:
+		format = VIRTIO_GPU_FORMAT_R8G8B8X8_UNORM;
+		break;
+	case DRM_FORMAT_ABGR8888:
+		format = VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM;
 		break;
 	default:
 		/*
