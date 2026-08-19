@@ -32,6 +32,7 @@
 #include <linux/virtio_ring.h>
 
 #include <drm/drm_edid.h>
+#include <drm/drm_mode_object.h>
 #include <drm/drm_print.h>
 
 #include "virtgpu_drv.h"
@@ -825,7 +826,22 @@ static void virtio_gpu_cmd_get_display_info_cb(struct virtio_gpu_device *vgdev,
 
 	spin_lock(&vgdev->display_info_lock);
 	for (i = 0; i < vgdev->num_scanouts; i++) {
+		struct drm_connector *connector = &vgdev->outputs[i].conn;
+
 		vgdev->outputs[i].info = resp->pmodes[i];
+		/* The rect's position is the host's suggestion for where this
+		 * display sits in the desktop; expose it the way qxl does, so
+		 * userspace with no saved configuration arranges to match.
+		 * Runs before the config-changed worker's hotplug event (it
+		 * waits on display_info_pending), so a compositor reacting to
+		 * the uevent reads the updated values.
+		 */
+		drm_object_property_set_value(&connector->base,
+			vgdev->ddev->mode_config.suggested_x_property,
+			le32_to_cpu(resp->pmodes[i].r.x));
+		drm_object_property_set_value(&connector->base,
+			vgdev->ddev->mode_config.suggested_y_property,
+			le32_to_cpu(resp->pmodes[i].r.y));
 		if (resp->pmodes[i].enabled) {
 			DRM_DEBUG("output %d: %dx%d+%d+%d", i,
 				  le32_to_cpu(resp->pmodes[i].r.width),
