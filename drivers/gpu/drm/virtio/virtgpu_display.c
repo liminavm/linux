@@ -30,6 +30,7 @@
 #include <drm/drm_edid.h>
 #include <drm/drm_fourcc.h>
 #include <drm/drm_gem_framebuffer_helper.h>
+#include <drm/drm_mode_object.h>
 #include <drm/drm_print.h>
 #include <drm/drm_probe_helper.h>
 #include <drm/drm_simple_kms_helper.h>
@@ -305,6 +306,12 @@ static int vgdev_output_init(struct virtio_gpu_device *vgdev, int index)
 	drm_connector_helper_add(connector, &virtio_gpu_conn_helper_funcs);
 	if (vgdev->has_edid)
 		drm_connector_attach_edid_property(connector);
+	drm_object_attach_property(&connector->base,
+				   dev->mode_config.suggested_x_property, 0);
+	drm_object_attach_property(&connector->base,
+				   dev->mode_config.suggested_y_property, 0);
+	drm_object_attach_property(&connector->base,
+				   vgdev->hotplug_mode_update_property, 1);
 
 	drm_simple_encoder_init(dev, encoder, DRM_MODE_ENCODER_VIRTUAL);
 	drm_encoder_helper_add(encoder, &virtio_gpu_enc_helper_funcs);
@@ -377,6 +384,11 @@ int virtio_gpu_modeset_init(struct virtio_gpu_device *vgdev)
 	vgdev->ddev->mode_config.max_height = YRES_MAX;
 
 	vgdev->ddev->mode_config.fb_modifiers_not_supported = true;
+
+	drm_mode_create_suggested_offset_properties(vgdev->ddev);
+	vgdev->hotplug_mode_update_property =
+		drm_property_create_range(vgdev->ddev, DRM_MODE_PROP_IMMUTABLE,
+					  "hotplug_mode_update", 0, 1);
 
 	for (i = 0 ; i < vgdev->num_scanouts; ++i)
 		vgdev_output_init(vgdev, i);

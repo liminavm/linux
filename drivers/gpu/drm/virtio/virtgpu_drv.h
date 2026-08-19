@@ -245,6 +245,10 @@ struct virtio_gpu_device {
 	/* current display info */
 	spinlock_t display_info_lock;
 	bool display_info_pending;
+	/* compositors only honor the suggested offsets on connectors that
+	 * declare hotplug-driven mode updates, as qxl and vmwgfx do
+	 */
+	struct drm_property *hotplug_mode_update_property;
 
 	struct virtio_gpu_fence_driver fence_drv;
 
