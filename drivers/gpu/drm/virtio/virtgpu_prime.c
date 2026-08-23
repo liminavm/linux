@@ -258,6 +258,7 @@ static int virtgpu_dma_buf_init_obj(struct drm_device *dev,
 	virtio_gpu_cmd_resource_create_blob(vgdev, bo, &params,
 					    ents, nents);
 	bo->guest_blob = true;
+	bo->blob_mem = params.blob_mem;
 
 	dma_buf_unpin(attach);
 	dma_resv_unlock(resv);
@@ -274,6 +275,8 @@ err_pin:
 
 static const struct drm_gem_object_funcs virtgpu_gem_dma_buf_funcs = {
 	.free = virtgpu_dma_buf_free_obj,
+	.open = virtio_gpu_gem_object_open,
+	.close = virtio_gpu_gem_object_close,
 };
 
 static void virtgpu_dma_buf_move_notify(struct dma_buf_attachment *attach)
